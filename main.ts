@@ -242,7 +242,9 @@ scene.onOverlapTile(SpriteKind.Projectile, assets.tile`myTile1`, function (sprit
     sprite.destroy()
 })
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
-    game.over(true, effects.confetti)
+    if (Dungeons == []) {
+        game.over(true, effects.confetti)
+    }
 })
 let KKey: Sprite = null
 let projectile: Sprite = null
@@ -252,12 +254,14 @@ let LastDirection = 0
 let Start_cutsceene = false
 let mySprite: Sprite = null
 let Dungeon: tiles.WorldMap = null
+let Dungeons: tiles.WorldMap[] = []
 let Have_Gun = false
 let trap = false
 trap = false
 Have_Gun = false
 let Start_Map = tiles.createMap(tilemap`level1`)
-Dungeon = tiles.createMap(tilemap`level3`)
+Dungeons = [tiles.createMap(tilemap`level3`)]
+Dungeon = Dungeons.shift()
 info.setLife(100)
 tiles.loadMap(Start_Map)
 mySprite = sprites.create(img`
