@@ -1,46 +1,49 @@
 namespace SpriteKind {
     export const TrappedPlayer = SpriteKind.create()
     export const Key = SpriteKind.create()
+    export const Screen = SpriteKind.create()
 }
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     LastDirection = 2
 })
 scene.onHitWall(SpriteKind.Player, function (sprite, location) {
-    if (tiles.tileIs(location, sprites.dungeon.chestClosed)) {
-        if (controller.A.isPressed()) {
-            Have_Gun = true
-            music.powerUp.play()
-            tiles.setTileAt(location, sprites.dungeon.chestOpen)
-            game.setDialogCursor(img`
-                .........................
-                ....................cccbb
-                ...................bbbbbb
-                ...................bb.b..
-                ..................111b...
-                ...6666666........111....
-                .66666666666......111....
-                6666666666666......1.....
-                6666666666666.....11.....
-                6661f66661f666...11......
-                6661f66661f666...1.......
-                66666666666666..1........
-                6666666666666611.........
-                66666666666666...........
-                66666666666666...........
-                66666666666666...........
-                6666666666666............
-                6666666666666............
-                .66666666666.............
-                ...6666666...............
-                `)
-            game.splash("You obtained a", "BEGINNERS PISTOL!")
-            game.splash("Press A to shoot!")
-        }
-    } else if (tiles.tileIs(location, sprites.dungeon.doorClosedNorth)) {
-        if (Have_key) {
-            if (sprites.readDataString(sprites.readDataSprite(mySprite, "Following key"), "KeyKind") == "door") {
-                tiles.setWallAt(location, false)
-                tiles.setTileAt(location, sprites.dungeon.doorOpenNorth)
+    if (controller.A.isPressed()) {
+        if (tiles.tileIs(location, sprites.dungeon.chestClosed)) {
+            if (controller.A.isPressed()) {
+                Have_Gun = true
+                music.powerUp.play()
+                tiles.setTileAt(location, sprites.dungeon.chestOpen)
+                game.setDialogCursor(img`
+                    .........................
+                    ....................cccbb
+                    ...................bbbbbb
+                    ...................bb.b..
+                    ..................111b...
+                    ...6666666........111....
+                    .66666666666......111....
+                    6666666666666......1.....
+                    6666666666666.....11.....
+                    6661f66661f666...11......
+                    6661f66661f666...1.......
+                    66666666666666..1........
+                    6666666666666611.........
+                    66666666666666...........
+                    66666666666666...........
+                    66666666666666...........
+                    6666666666666............
+                    6666666666666............
+                    .66666666666.............
+                    ...6666666...............
+                    `)
+                game.splash("You obtained a", "BEGINNERS PISTOL!")
+                game.splash("Press A to shoot!")
+            }
+        } else if (tiles.tileIs(location, sprites.dungeon.doorClosedNorth)) {
+            if (Have_key) {
+                if (sprites.readDataString(sprites.readDataSprite(mySprite, "Following key"), "KeyKind") == "door") {
+                    tiles.setWallAt(location, false)
+                    tiles.setTileAt(location, sprites.dungeon.doorOpenNorth)
+                }
             }
         }
     }
@@ -58,56 +61,98 @@ scene.onOverlapTile(SpriteKind.Projectile, assets.tile`myTile`, function (sprite
     sprite.destroy()
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
-    if (trap_time > 0) {
-        info.changeLifeBy(-1)
-        trap_time += -1
-        animation.runMovementAnimation(
-        mySprite,
-        animation.animationPresets(animation.shake),
-        500,
-        false
-        )
-    } else if (trap && trap_time == 0) {
-        tiles.setTileAt(tiles.locationOfSprite(mySprite), sprites.dungeon.floorDark2)
-        mySprite.setKind(SpriteKind.Player)
-        controller.moveSprite(mySprite)
-        trap = false
+    mySprite2.destroy()
+    if (Start_Screen_open) {
+        Start_Screen_open = false
+        Have_Gun = false
+        Start_Map = tiles.createMap(tilemap`level1`)
+        Dungeons = [tiles.createMap(tilemap`level4`), tiles.createMap(tilemap`level3`)]
+        Dungeon = Dungeons.shift()
+        info.setLife(100)
+        tiles.loadMap(Start_Map)
+        mySprite = sprites.create(img`
+            . . . . 6 6 6 6 6 6 6 . . . . 
+            . . 6 6 6 6 6 6 6 6 6 6 6 . . 
+            . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
+            . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
+            6 6 6 6 1 f 6 6 6 6 1 f 6 6 6 
+            6 6 6 6 1 f 6 6 6 6 1 f 6 6 6 
+            6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
+            6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
+            6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
+            6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
+            6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
+            . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
+            . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
+            . . 6 6 6 6 6 6 6 6 6 6 6 . . 
+            . . . . 6 6 6 6 6 6 6 . . . . 
+            `, SpriteKind.Player)
+        scene.cameraFollowSprite(mySprite)
+        Intro()
     } else {
-        if (Have_Gun) {
-            if (LastDirection == 0) {
-                projectile = sprites.createProjectileFromSprite(img`
-                    b b 
-                    b b 
-                    `, mySprite, -150, 0)
-            } else if (LastDirection == 1) {
-                projectile = sprites.createProjectileFromSprite(img`
-                    b b 
-                    b b 
-                    `, mySprite, 150, 0)
-            } else if (LastDirection == 2) {
-                projectile = sprites.createProjectileFromSprite(img`
-                    b b 
-                    b b 
-                    `, mySprite, 0, -150)
-            } else {
-                projectile = sprites.createProjectileFromSprite(img`
-                    b b 
-                    b b 
-                    `, mySprite, 0, 150)
+        if (trap_time > 0) {
+            info.changeLifeBy(-1)
+            trap_time += -1
+            animation.runMovementAnimation(
+            mySprite,
+            animation.animationPresets(animation.shake),
+            500,
+            false
+            )
+        } else if (trap && trap_time == 0) {
+            tiles.setTileAt(tiles.locationOfSprite(mySprite), sprites.dungeon.floorDark2)
+            mySprite.setKind(SpriteKind.Player)
+            controller.moveSprite(mySprite)
+            trap = false
+        } else {
+            if (Have_Gun) {
+                if (LastDirection == 0) {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        b b 
+                        b b 
+                        `, mySprite, -150, 0)
+                } else if (LastDirection == 1) {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        b b 
+                        b b 
+                        `, mySprite, 150, 0)
+                } else if (LastDirection == 2) {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        b b 
+                        b b 
+                        `, mySprite, 0, -150)
+                } else {
+                    projectile = sprites.createProjectileFromSprite(img`
+                        b b 
+                        b b 
+                        `, mySprite, 0, 150)
+                }
+                sprites.setDataNumber(projectile, "Power", 1)
+                music.pewPew.play()
             }
-            sprites.setDataNumber(projectile, "Power", 1)
-            music.pewPew.play()
         }
     }
 })
 scene.onOverlapTile(SpriteKind.Player, assets.tile`Hole`, function (sprite, location) {
+    Dungeon_Intro(sprite)
+})
+controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
+    LastDirection = 0
+})
+sprites.onOverlap(SpriteKind.Player, SpriteKind.Key, function (sprite, otherSprite) {
+    sprite.z = 100
+    otherSprite.follow(sprite, 50)
+    Have_key = true
+    sprites.setDataSprite(sprite, "Following key", otherSprite)
+})
+function Dungeon_Intro (Sprite2: Sprite) {
     if (Start_cutsceene) {
         story.startCutscene(function () {
             tiles.loadMap(Dungeon)
-            lantern.startLanternEffect(mySprite)
-            tiles.placeOnRandomTile(sprite, sprites.dungeon.purpleOuterNorth1)
-            sprite.ay = 150
-            sprite.setImage(img`
+            lantern.startLanternEffect(Sprite2)
+            tiles.placeOnRandomTile(Sprite2, sprites.dungeon.purpleOuterNorth1)
+            Sprite2.ay = 150
+            Sprite2.setImage(img`
                 ........1.1.........
                 ......1.1.1.1.......
                 ......1.1.1.1......1
@@ -138,16 +183,7 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`Hole`, function (sprite, loca
             Have_key = false
         })
     }
-})
-controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
-    LastDirection = 0
-})
-sprites.onOverlap(SpriteKind.Player, SpriteKind.Key, function (sprite, otherSprite) {
-    sprite.z = 100
-    otherSprite.follow(sprite, 50)
-    Have_key = true
-    sprites.setDataSprite(sprite, "Following key", otherSprite)
-})
+}
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     LastDirection = 1
 })
@@ -177,10 +213,26 @@ function Make_Key_for (KeyKind: string) {
 controller.down.onEvent(ControllerButtonEvent.Pressed, function () {
     LastDirection = 3
 })
+function Intro () {
+    story.startCutscene(function () {
+        Start_cutsceene = true
+        story.printCharacterText("A  beautiful day", "You")
+        story.printCharacterText("Wait...", "You")
+        story.printCharacterText("Hmm...", "You")
+        timer.after(1500, function () {
+            story.printCharacterText("Is that a hole?", "You")
+            story.printCharacterText("Whats inside?", "You")
+            story.spriteMoveToLocation(mySprite, 16 * 2 + 8, 16 * 2 + 8, 25)
+        })
+    })
+}
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.floorDark5, function (sprite, location) {
+    Dungeon_Intro_2(sprite)
+})
+function Dungeon_Intro_2 (Sprite2: Sprite) {
     if (Start_cutsceene) {
         story.startCutscene(function () {
-            sprite.setImage(img`
+            Sprite2.setImage(img`
                 . . . . 6 6 6 6 6 6 6 . . . . 
                 . . 6 6 6 6 6 6 6 6 6 6 6 . . 
                 . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
@@ -197,7 +249,7 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.floorDark5, function (spr
                 . . 6 6 6 6 6 6 6 6 6 6 6 . . 
                 . . . . 6 6 6 6 6 6 6 . . . . 
                 `)
-            sprite.ay = 0
+            Sprite2.ay = 0
             story.printCharacterText("Oww...", "You")
             story.printCharacterText("That hurts...", "You")
             story.printCharacterText("...a lot", "You")
@@ -230,69 +282,168 @@ scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.floorDark5, function (spr
                     ......1.....11......
                     `)
                 game.splash("You fell into a dark", "dungeon!")
-                controller.moveSprite(mySprite)
+                controller.moveSprite(Sprite2)
                 music.thump.play()
             })
         })
     }
     Start_cutsceene = false
-})
+}
+function Next_Dungeon () {
+    Dungeon = Dungeons.shift()
+    tiles.loadMap(Dungeon)
+    tiles.placeOnTile(mySprite, tiles.locationInDirection(Door_Location, CollisionDirection.Bottom))
+}
 scene.onOverlapTile(SpriteKind.Projectile, assets.tile`myTile1`, function (sprite, location) {
     tiles.setTileAt(location, sprites.dungeon.floorDark2)
     sprite.destroy()
 })
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
+    Door_Location = location
     if (Dungeons == []) {
         game.over(true, effects.confetti)
+    } else {
+        Next_Dungeon()
     }
 })
+let Door_Location: tiles.Location = null
 let KKey: Sprite = null
-let projectile: Sprite = null
-let trap_time = 0
-let Have_key = false
-let LastDirection = 0
 let Start_cutsceene = false
-let mySprite: Sprite = null
+let projectile: Sprite = null
 let Dungeon: tiles.WorldMap = null
 let Dungeons: tiles.WorldMap[] = []
-let Have_Gun = false
+let Start_Map: tiles.WorldMap = null
+let trap_time = 0
 let trap = false
-trap = false
-Have_Gun = false
-let Start_Map = tiles.createMap(tilemap`level1`)
-Dungeons = [tiles.createMap(tilemap`level3`)]
-Dungeon = Dungeons.shift()
-info.setLife(100)
-tiles.loadMap(Start_Map)
-mySprite = sprites.create(img`
-    . . . . 6 6 6 6 6 6 6 . . . . 
-    . . 6 6 6 6 6 6 6 6 6 6 6 . . 
-    . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
-    . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
-    6 6 6 6 1 f 6 6 6 6 1 f 6 6 6 
-    6 6 6 6 1 f 6 6 6 6 1 f 6 6 6 
-    6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
-    6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
-    6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
-    6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
-    6 6 6 6 6 6 6 6 6 6 6 6 6 6 6 
-    . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
-    . 6 6 6 6 6 6 6 6 6 6 6 6 6 . 
-    . . 6 6 6 6 6 6 6 6 6 6 6 . . 
-    . . . . 6 6 6 6 6 6 6 . . . . 
-    `, SpriteKind.Player)
-scene.cameraFollowSprite(mySprite)
-story.startCutscene(function () {
-    Start_cutsceene = true
-    story.printCharacterText("A  beautiful day", "You")
-    story.printCharacterText("Wait...", "You")
-    story.printCharacterText("Hmm...", "You")
-    timer.after(1500, function () {
-        story.printCharacterText("Is that a hole?", "You")
-        story.printCharacterText("Whats inside?", "You")
-        story.spriteMoveToLocation(mySprite, 16 * 2 + 8, 16 * 2 + 8, 25)
-    })
-})
+let mySprite: Sprite = null
+let Have_key = false
+let Have_Gun = false
+let LastDirection = 0
+let Start_Screen_open = false
+let mySprite2: Sprite = null
+mySprite2 = sprites.create(img`
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbcccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbcccccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbccccccbcccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbcccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccbbbbbbbccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbbbbbbbbcccbbbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbbbbbbbbbbcbbbbbbccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbccccccbbbbcccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbbbbbbbbbbbbbbcccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbb
+    bccccccbbbbbccccccccccccccccccbbbbccccbbbbbbbbbbccbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbcccccccccccbbbbbbbbbbbbbbbbbbbccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbbb
+    bbccccccbbbbccccccccccccccccccbbbbccccccbbbbbbcccccbbbbbbbbbbbbbbbccccccbbbbbbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbb
+    bbccccccbbbbcccccccccccccccccbbbbbccccccbbbbbccccccbbbbbbbbbbbbbbcccccccccccccccccbbbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbbb
+    bbbccccccbbbbccccccccccccccccbbbbbcccccbbbbbbcccccccbbbbbbbbbbbbbccccccccccccccccccbbbbcccccccccccccbbbbbbbbbbbbbbbbcccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbb
+    bbbccccccbbbbbbbbbbbbbbcccccbbbbbbcccccbbbbbbbccccccbbbbbbbbbbbbccccccccccccccccccccbbbbcccccccccccccbbbbbbbbbbbbbbbbcccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbb
+    bbbbccccccbbbbbbbbbbbbbcccccbbbbbcccccbbbbbbbbcccccccbbbbbbbbbbcccccccccccccccccccccbbbbbcccccccccccccbbbbbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccccbbbbbbbbbbbccccccbbbbbcccccbbbbbbbbbccccccbbbbbbbbbcccccccccccccccccccccccbbbbbccccccccccccbbbbbbbbbbbbbbbbccccccccbbbbbbbccccccbbbbbbbbbbbbbbbbbbbbb
+    bbbbbccccccbbbbbbbbbbbcccccbbbbbcccccbbbbbbbbbbbccccccbbbbbbbbbcccccccccccccccccccccccbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbccccccccbbbbbbbccccccbbbbbbbbbbbbbbbbbbbbb
+    bbbbbcccccccbbbbbbbbbccccccbbbbbbccccbbbbbbbbbbccccccccbbbbbbbbccccccccccccccccccccccbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbccccccccbbbbbccccccbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbccccccbbbbbbbbbcccccbbbbbbbcccccbbbbbbbbccccccccccbbbbbbbbccccccccbbbbbbbccccccbbbbbbbbbbbbbbbccccbbbbbbbbbbbbbbbccccccccbbbbcccccccbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbccccccccccccccccccccbbbbbbbbcccccbbbbbbbcccccccccccbbbbbbbccccccccbbbbbbbccccccbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbcccccccbbbbbccccccbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbccccccccccccccccccbbbbbbbbbbccccbbbbbbcccccccccccccbbbbbbbccccccccbbbbbccccccbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbccccccbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbccccccccccccccccccbbbbbbbbbbccccccccccccccccccccccccbbbbbbccccccccbbbbcccccccbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbccccccbbbbccccccbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbcccccccccccccccccbbbbbbbbbbbccccccccccccccccccccccbbbbbbbbcccccccbbbbbccccccbbbbbbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbcccccbbbbccccccbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccbbcccccbbbbbbbbbbccccccbbbbbcccccbbbbbccccccccccccccccbbbbbbbbbbbbbbbbbbcccbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccccbbbccccbbbbbbbbbbccccccbbbbccccccbbbbbcccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccbbbcccbbbbbbbbbbbbcccccbbbbccccccbbbbbcccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcbbbbbbbbbbbbbcccbbbbbbbbcccbbbbbbccccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbcccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbcccccbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbccccbbbbccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbccccbbbbcccccbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbccccbbbccccccbbbbbbbbbbbbbbbbbbcccccccccccbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbbbb
+    bbbbccccbbbccccccbbbbbbbbbbbbbbbbbbccccccccccccbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbbbb
+    bbbbccccbbbccccccbbbbbbbbcccccbbbbcccccccccccccbbbcccccccbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbbbbbbbbbbbbbbbccccccccccbbbbbbbbbbbbbbbccccccccbbbbbbbbbbbbb
+    bbbbccccbbbbcccccbbbbbbbbcccccbbbbccccccbbccccccbbccccccccbbbbbbbbbbbbbccccccbbbbbbcccccccccccbbbbbbbbbbbbbbbbbbbbcccccccccccbbbbbbbbbbbbbcccccccccbbbbbbbbbbbbb
+    bbbbcccbbbbbcccccbbbbbbbbcccccbbbbccccccbbccccccbbcccccccccbbbbbbbbbcccccccccbbbbbccccbbbbbccccbbbcccccccccbbbbbbbcccccccccccbbbbbbbbbbbbccccccbbbbbbbbbbbbbbbbb
+    bbbbcccbbbbbcccccbbbbbbbbccccccbbbccccccbbbcccccbbccccccccccbbbbbbbbccccccccccbbbbccccbbbbbccccbbbcccccccccccbbbbbcccccbbcccccbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbb
+    bbbbccccbbbbcccccbbbbbbbbccccccbbcccccccbbbcccccbbccccccccccbbbbbbbccccbbbbcccbbbbccccbbbbbccccbbcccccccccccccbbbbccccbbbbccccbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbb
+    bbbbccccbbbbcccccbbbbbbbbbccccccccccccccbbbccccbbbcccccbccccbbbbbbbcccbbbbbcccbbbbcccccccccccccbcccccbbbccccccccbbccccbbbbbcccbbbbbbbbbbbccccbbbbbbbbbbbbbbbbbbb
+    bbbbcccccbbbcccccbbbbbbbbbccccccccccccccbbbbcccbbbcccccbccccbbbbbbccccbbbbbccccbbbcccccccccccccbccccbbbbbbbcccccbbcccbbbbbccccbbbbbbbbbbbcccccccccbbbbbbbbbbbbbb
+    bbbbcccccccccccccbbbbbbbbbcccccccccccccbbbbbcccbbbcccccbccccbbbbbbccccbbbbcccccbbbccccccccccccbbccccbbbbbbbbccccbbcccbbbbbccccbbbbbbbbbbbbcccccccccbbbbbbbbbbbbb
+    bbbbccccccccccccbbbbbbbbbbccccccccccccbbbbbbcccbbbccccbbccccbbbbbcccccccccccccccbbcccccccbbbbbbbcccbbbbbbbbcccccbbcccbbbbbcccbbbbbbbbbbbbbbccccccccccbbbbbbbbbbb
+    bbbbcccccccccccbbbbbbbbbbbbcccccccccccbbbbbbcccbbbccccbbccccbbbbbcccccccccccccccbbbcccccbbbbbbbbccccbbbbbbccccccbbccccbbbbcccbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbb
+    bbbbcccccccccccbbbbbbbbbbbbbccccccccbbbbbbbbcccbbbccccbbccccbbbbbbbbccccccccccccbbbccccccbbbbbbbccccccbbcccccccbbbccccbbbbcccbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbb
+    bbbbccccccccccbbbbbbbbbbbbbbbccccbbbbbbbbbbbcccbbbcccbbbccccbbbbbbbbbbccccccccccbbbbcccccccccbbbccccccccccccccbbbbccccbbbbcccbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbb
+    bbbbbccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccbbbbbbbbbbccccbbbbbbbbbbbbbbbcccccbbbbbccccccccbbbbccccccccccccbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbcccccccbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccbbbbbbcccccccbbbbbbccccccccbbbbbbbbbbbbbbbcccbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcbbbbcccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccbcccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbccccccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcccccbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+    `, SpriteKind.Screen)
+Start_Screen_open = true
 forever(function () {
     for (let index = 0; index < 3; index++) {
         music.playMelody("E - F - A A B B ", 200)
