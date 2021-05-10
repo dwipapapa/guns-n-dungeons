@@ -3,6 +3,10 @@ namespace SpriteKind {
     export const Key = SpriteKind.create()
     export const Screen = SpriteKind.create()
 }
+function Make_obtained_splash () {
+    game.splash("You obtained a", "" + list[0] + "!")
+    our_guns.push(list.shift())
+}
 controller.up.onEvent(ControllerButtonEvent.Pressed, function () {
     LastDirection = 2
 })
@@ -35,8 +39,13 @@ scene.onHitWall(SpriteKind.Player, function (sprite, location) {
                     .66666666666.............
                     ...6666666...............
                     `)
-                game.splash("You obtained a", "BEGINNERS PISTOL!")
-                game.splash("Press A to shoot!")
+                Make_obtained_splash()
+                POWER = 1
+                if (our_guns.length == 1) {
+                    game.splash("Press A to shoot!")
+                } else if (our_guns.length == 2) {
+                    game.splash("Press Menu to Select Guns!")
+                }
             }
         } else if (tiles.tileIs(location, sprites.dungeon.doorClosedNorth)) {
             if (Have_key) {
@@ -129,7 +138,7 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
                         b b 
                         `, mySprite, 0, 150)
                 }
-                sprites.setDataNumber(projectile, "Power", 1)
+                sprites.setDataNumber(projectile, "Power", POWER)
                 music.pewPew.play()
             }
         }
@@ -228,6 +237,15 @@ function Intro () {
         })
     })
 }
+controller.menu.onEvent(ControllerButtonEvent.Pressed, function () {
+    if (not_Menu_open) {
+        blockMenu.showMenu(our_guns, MenuStyle.Grid, MenuLocation.FullScreen)
+        not_Menu_open = false
+    } else {
+        not_Menu_open = true
+        blockMenu.closeMenu()
+    }
+})
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.floorDark5, function (sprite, location) {
     Dungeon_Intro_2(sprite)
 })
@@ -300,6 +318,21 @@ scene.onOverlapTile(SpriteKind.Projectile, assets.tile`myTile1`, function (sprit
     tiles.setTileAt(location, sprites.dungeon.floorDark2)
     sprite.destroy()
 })
+blockMenu.onMenuOptionSelected(function (option, index) {
+    if (option == "BEGINNERS PISTOL") {
+        POWER = 1
+    } else if (option == "EXPERT PISTOL") {
+        POWER = 5
+    } else if (option == "BEGINNERS SNIPER") {
+        POWER = 10
+    } else if (option == "EXPERT SNIPER") {
+        POWER = 15
+    } else if (option == "BEGINNERS BAZOOKA") {
+        POWER = 20
+    } else if (option == "EXPERT BAZOOKA") {
+        POWER = 25
+    }
+})
 scene.onOverlapTile(SpriteKind.Player, sprites.dungeon.doorOpenNorth, function (sprite, location) {
     Door_Location = location
     if (Dungeons == []) {
@@ -319,8 +352,12 @@ let trap_time = 0
 let trap = false
 let mySprite: Sprite = null
 let Have_key = false
+let POWER = 0
 let Have_Gun = false
 let LastDirection = 0
+let list: string[] = []
+let our_guns: string[] = []
+let not_Menu_open = false
 let Start_Screen_open = false
 let mySprite2: Sprite = null
 mySprite2 = sprites.create(img`
@@ -446,6 +483,16 @@ mySprite2 = sprites.create(img`
     bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     `, SpriteKind.Screen)
 Start_Screen_open = true
+not_Menu_open = true
+our_guns = []
+list = [
+"BEGINNERS PISTOL",
+"EXPERTS PISTOL",
+"BEGINNERS SNIPER",
+"EXPERTS SNIPER",
+"BEGINNERS BAZOOKA",
+"EXPERTS BAZOOKA"
+]
 forever(function () {
     for (let index = 0; index < 3; index++) {
         music.playMelody("E - F - A A B B ", 200)
@@ -453,6 +500,6 @@ forever(function () {
     music.playMelody("F - G E A A G G ", 200)
     for (let index = 0; index < 3; index++) {
         music.playMelody("B - A - F F E E ", 200)
+        music.playMelody("F - G E A A G G ", 200)
     }
-    music.playMelody("F - G E A A G G ", 200)
 })
